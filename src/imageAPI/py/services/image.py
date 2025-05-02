@@ -2,24 +2,18 @@ import boto3
 import json
 import base64
 from time import time
+import os
 
 AWS_REGION_BEDROCK = "us-west-2"
-S3_BUCKET = "images-bucket-111" #Name of the bucket to store the images
-#Bucket needs to be created in AWS S3 before running the code
+S3_BUCKET = os.environ.get("BUCKET_NAME")   #Global variable to store the bucket name
 
-'''
-Good prracitice to initialize clients outside the handler function to avoid re-initialization on every invocation.
-This is especially important for AWS Lambda functions, where the handler function can be invoked multiple times in a short period.
-'''
-#Bedrock client to invoke the model
 client = boto3.client(service_name="bedrock-runtime", region_name=AWS_REGION_BEDROCK)
-#AWS S3 client to store the images
 s3_client = boto3.client('s3')
 
 
 def handler(event, context):
     body = json.loads(event["body"])
-    description = body.get("description")   #What exactly we want to generate
+    description = body.get("description")
     if description:
         titan_config = get_titan_config(description)
         response = client.invoke_model(
@@ -37,22 +31,17 @@ def handler(event, context):
         
         }
 
-'''
-    The function takes a base64 encoded image string, decodes it, and saves it to an S3 bucket.
-    It generates a unique name for the image using the current timestamp and uploads the image to the specified S3 bucket.
-    '''
+
 def save_image_to_s3(base64_image: str):
-    image_file = base64.b64decode(base64_image) #Save as base64 image
+    image_file = base64.b64decode(base64_image)
     timestamp = int(time())
     image_name = str(timestamp) + '.jpg'
 
-    #Upload the image to S3 bucket
     s3_client.put_object(
         Bucket=S3_BUCKET,
         Key=image_name,
         Body=image_file,
     )
-    #Generate a presigned URL for the image
     signed_url = s3_client.generate_presigned_url(
         'get_object',
         Params={'Bucket': S3_BUCKET, 'Key': image_name},

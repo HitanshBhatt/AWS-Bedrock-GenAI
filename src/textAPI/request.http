@@ -1,4 +1,4 @@
-POST https://1c7aptkf22.execute-api.eu-west-1.amazonaws.com/prod/text?points=3  <! prod/text because that's what our resource is called; points is the query string parameter (after ?) !>
+POST https://1c7aptkf22.execute-api.eu-west-1.amazonaws.com/prod/text?points=3  <!-- prod/text because that's what our resource is called; points is the query string parameter (after ?) -->
 Content-Type: application/json
 
 {
